@@ -220,6 +220,7 @@ void Menu(vector<Task> & tasks, char & choice)
 			for (int i = 0; i < 4; i++)
 				for (int j = 0; j < 4; j++)
 					cout << "Ackermann(" << i << ", " << j << ") = " << ack(i, j) << endl;
+			break;
 		case 'Q':
 		case 'q':
 			break;
@@ -272,7 +273,9 @@ void deleteRecord(vector<Task> & tasks)
 		cin >> element;
 	}
 
-	tasks.erase(tasks.begin() + (element - 1));
+	for (size_t i = 0, max = tasks.size(); i != max; i++)
+		if (tasks[i].getID() == element)
+			tasks.erase(tasks.begin() + i)
 
 	return;
 }
@@ -298,7 +301,9 @@ void markComplete(vector<Task> & tasks)
 		cin >> element;
 	}
 
-	tasks[element - 1].setCompletion(true);
+	for (size_t i = 0, max = tasks.size(); i != max; i++)
+		if (tasks[i].getID() == element)
+			tasks[i].setCompletion(true);
 
 	return;
 }
