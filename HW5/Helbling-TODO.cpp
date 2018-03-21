@@ -27,6 +27,7 @@ void displayRecord(vector<Task> &);
 void deleteRecord(vector<Task> &);
 void markComplete(vector<Task> &);
 void deleteAllRecords(vector<Task> &);
+int ack(int, int);
 
 class Task
 {
@@ -186,7 +187,7 @@ void ProgramGreeting()
 
 void Menu(vector<Task> & tasks, char & choice)
 {
-	cout << "\n\n+ :: Add new task\n? :: Display all tasks\n- :: Remove task by ID\n/ :: Mark item as complete\nx :: Delete all tasks\nq :: Save tasks and exit\n\n";
+	cout << "\n\n+ :: Add new task\n? :: Display all tasks\n- :: Remove task by ID\n/ :: Mark item as complete\nx :: Delete all tasks\nr :: Recursion example\nq :: Save tasks and exit\n\n";
 	cin >> choice;
 
 	switch (choice)
@@ -215,6 +216,10 @@ void Menu(vector<Task> & tasks, char & choice)
 			//	(if accidental, can send SIGINT to recover previous data because changes are only committed on exit; data added in that run is lost)
 			deleteAllRecords(tasks);
 			break;
+		case 'r':
+			for (int i = 0; i < 4; i++)
+				for (int j = 0; j < 4; j++)
+					cout << "Ackermann(" << i << ", " << j << ") = " << ack(i, j) << endl;
 		case 'Q':
 		case 'q':
 			break;
@@ -317,4 +322,15 @@ void deleteAllRecords(vector<Task> & tasks)
 	task.setCurrID(1);
 
 	return;
+}
+
+// Ackermann's function
+int ack(int i, int j)
+{
+	if (i == 0)
+		return j + 1;
+	if (j == 0)
+		return ack(i - 1, 1);
+
+	return ack(i - 1, ack(i, j - 1));
 }
