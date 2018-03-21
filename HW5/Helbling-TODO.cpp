@@ -36,7 +36,6 @@ private:
 	// CITATION - How to auto increment task ID: https://stackoverflow.com/a/17858383
 	static int currID;
 	int task_id;
-	// Feature 4 - Mark item as completed
 	bool complete;
 public:
 	// Feature 3 - Auto increment task ID using initialization list
@@ -68,6 +67,7 @@ public:
 
 	void setCurrID(int);
 
+	// Feature 4 - Mark item as completed
 	void setCompletion(bool status)
 	{
 		complete = status;
@@ -145,10 +145,10 @@ int main()
 			task.setCurrID(count + 1);
 		else
 			task.setCurrID(task.getID() + 1);
+
 		tasks.push_back(task);
 	}
 	load.close();
-
 
 	do
 	{
@@ -170,6 +170,7 @@ int main()
 		if (tasks[i].getCompletion() == 0)
 			count++;
 	}
+
 	if (count > 0)
 		cout << "You have " << count << " task(s) to do. Get on it!\n";
 	else
@@ -181,13 +182,13 @@ int main()
 void ProgramGreeting()
 {
 	cout << "Welcome to \"TODO\", a program for creating a todo list! The task IDs reset only if you completely delete your todo list.\n";
-	return;
 }
 
 void Menu(vector<Task> & tasks, char & choice)
 {
 	cout << "\n\n+ :: Add new task\n? :: Display all tasks\n- :: Remove task by ID\n/ :: Mark item as complete\nx :: Delete all tasks\nq :: Save tasks and exit\n\n";
 	cin >> choice;
+
 	switch (choice)
 	{
 		// Specification 1 - Allow the user to enter tasks with a '+' symbol
@@ -284,7 +285,7 @@ void markComplete(vector<Task> & tasks)
 	cout << "Which item would you like to mark as complete? ";
 	cin >> element;
 
-		while(cin.fail() || element <= 0)
+	while(cin.fail() || element <= 0)
 	{
 		cin.clear();
 		cin.ignore();
