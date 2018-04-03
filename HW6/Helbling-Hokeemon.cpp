@@ -218,11 +218,11 @@ int main()
 
 	for (int i = 0; i < max; i++)
 	{
-		int rd = rand() % 2;
+		int random = rand() % 2;
 
-		if (rd == 1)
+		if (random == 1)
 			creatures.push_back(make_unique<Big>(names[i]));
-		else if (rd == 0)
+		else if (random == 0)
 			creatures.push_back(make_unique<Small>(names[i]));
 
 		creatures[i]->setMood();
