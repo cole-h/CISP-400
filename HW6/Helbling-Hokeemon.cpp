@@ -20,13 +20,13 @@ using namespace std;
 class Creature;
 
 // Function Prototypes
-void Feed(vector<shared_ptr<Creature>> &);
-void Listen(vector<shared_ptr<Creature>> &);
-void Menu(vector<shared_ptr<Creature>> &, char &);
-void PassTime(vector<shared_ptr<Creature>> &);
-void Play(vector<shared_ptr<Creature>> &);
+void Feed(vector<unique_ptr<Creature>> &);
+void Listen(vector<unique_ptr<Creature>> &);
+void Menu(vector<unique_ptr<Creature>> &, char &);
+void PassTime(vector<unique_ptr<Creature>> &);
+void Play(vector<unique_ptr<Creature>> &);
 void ProgramGreeting();
-void Resurrect(vector<shared_ptr<Creature>> &);
+void Resurrect(vector<unique_ptr<Creature>> &);
 
 // Specification 6 - Implement with an abstract base class called Creature()
 class Creature
@@ -68,6 +68,10 @@ public:
 			mood = "Frustrated";
 		if (boredom >= 15 && boredom < 20)
 			mood = "Mad";
+		if (boredom >= 20)
+			mood = "Catatonic";
+		if (hunger >= 10)
+			mood = "Dead";
 	}
 
 	string getMood()
@@ -112,7 +116,6 @@ public:
 		{
 			dead = true;
 			cout << this->getName() << " just died from neglect! You monster!\n";
-			mood = "Dead";
 		}
 	}
 
@@ -120,8 +123,6 @@ public:
 	{
 		unresponsive = true;
 		cout << this->getName() << " is now unresponsive due to neglect.\n";
-
-		mood = "Catatonic";
 	}
 
 	int getStatus()
@@ -202,7 +203,7 @@ int main()
 	char choice;
 	int max = (rand() % 6) + 1;
 	string name;
-	vector<shared_ptr<Creature>> creatures;
+	vector<unique_ptr<Creature>> creatures;
 	vector<string> names;
 
 	ProgramGreeting();
@@ -220,9 +221,9 @@ int main()
 		int rd = rand() % 2;
 
 		if (rd == 1)
-			creatures.push_back(make_shared<Big>(names[i]));
+			creatures.push_back(make_unique<Big>(names[i]));
 		else if (rd == 0)
-			creatures.push_back(make_shared<Small>(names[i]));
+			creatures.push_back(make_unique<Small>(names[i]));
 
 		creatures[i]->setMood();
 	}
@@ -235,7 +236,7 @@ int main()
 		PassTime(creatures);
 	} while (choice != 'q' && choice != 'Q');
 
-	cout << "\nGoodbye! Your creatures will be released back into the wild.\n";
+	cout << "\nGoodbye! Your living creatures will be released back into the wild.\n";
 
 	return 0;
 }
@@ -246,7 +247,7 @@ void ProgramGreeting()
 }
 
 // Specification 1 - You will need to implement a PassTime() method which will increase hunger and boredom by 1. This will be called after Listen, Play or Feed.
-void PassTime(vector<shared_ptr<Creature>> & creatures)
+void PassTime(vector<unique_ptr<Creature>> & creatures)
 {
 	for (size_t i = 0, max = creatures.size(); i != max; i++)
 	{
@@ -264,16 +265,17 @@ void PassTime(vector<shared_ptr<Creature>> & creatures)
 }
 
 // Specification 2 - Create a numeric menu which will allow you to select Listen, Play, Feed, or Quit. Do not accept any other options.
-void Menu(vector<shared_ptr<Creature>> & creatures, char & choice)
+void Menu(vector<unique_ptr<Creature>> & creatures, char & choice)
 {
+	size_t j = 0;
+
 	for (size_t i = 0, max = creatures.size(); i != max; i++)
 	{
-		size_t j = 0;
 		if (creatures[i]->getStatus() == 1)
 			j++;
 		if (j >= max)
 		{
-			cout << "All your creatues are dead. Seek professional help before you cause harm to living beings.\n";
+			cout << "\nAll your creatures are dead. Seek professional help before you cause harm to living beings.\n";
 			choice = 'q';
 			return;
 		}
@@ -317,7 +319,7 @@ void Menu(vector<shared_ptr<Creature>> & creatures, char & choice)
 }
 
 
-void Listen(vector<shared_ptr<Creature>> & creatures)
+void Listen(vector<unique_ptr<Creature>> & creatures)
 {
 	size_t index;
 
@@ -343,7 +345,7 @@ void Listen(vector<shared_ptr<Creature>> & creatures)
 }
 
 
-void Play(vector<shared_ptr<Creature>> & creatures)
+void Play(vector<unique_ptr<Creature>> & creatures)
 {
 	size_t index;
 
@@ -372,7 +374,7 @@ void Play(vector<shared_ptr<Creature>> & creatures)
 }
 
 
-void Feed(vector<shared_ptr<Creature>> & creatures)
+void Feed(vector<unique_ptr<Creature>> & creatures)
 {
 	size_t index;
 
@@ -401,7 +403,7 @@ void Feed(vector<shared_ptr<Creature>> & creatures)
 }
 
 
-void Resurrect(vector<shared_ptr<Creature>> & creatures)
+void Resurrect(vector<unique_ptr<Creature>> & creatures)
 {
 	size_t revive, kill;
 
