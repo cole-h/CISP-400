@@ -34,6 +34,8 @@ class Person
 public:
 	bool dead = false;
 	bool full_drink = true;
+	bool checked = false;
+	int won = 0;
 	string name;
 	string type;
 
@@ -41,13 +43,16 @@ public:
 	{
 		// Specification 3 - Randomly select a name for each character
 		int random = rand() % (sizeof(NAMES)/sizeof(*NAMES));
-		string newname = NAMES[random];
-		name = newname;
+		name = NAMES[random];
 	}
 
 	virtual int Play() = 0;
 	virtual void Drink() = 0;
 	virtual double Draw() = 0;
+
+	void setHighestCard(int max)
+	{
+	}
 
 	string getName()
 	{
@@ -65,15 +70,50 @@ public:
 		return full_drink;
 	}
 
+	void setChecked()
+	{
+		checked = true;
+	}
+
+	int getChecked()
+	{
+		return checked; // Dead person has been checked for being dead (to avoid spamming new players when only 1 has died)
+	}
+
+	void setDead()
+	{
+		dead = true;
+	}
+
 	int getDead()
 	{
 		return dead;
 	}
 
+	string getType()
+	{
+		return type;
+	}
+
+	void addWon()
+	{
+		won++;
+	}
+
+	int getWon()
+	{
+		return won;
+	}
+
+	int getDrinks()
+	{
+		return 0;
+	}
+
 	// Specification 2 - Overload the << operator to show class details
 	friend ostream& operator<<(ostream & out, Person & player)
 	{
-		out << player.getName() << "\t\t" << ' ' << player.type << ' ' << player.getDrinkStatus() << ' ' << player.getDead() << '\n';
+		out << left << setw(30) << player.getName() << right << setw(20) << player.getType() << ' ' << player.getDrinkStatus() << ' ' << player.getDead() << ' ' << player.getWon() << '\n';
 		return out;
 	}
 };
@@ -99,12 +139,19 @@ public:
 			this->full_drink = false;
 		}
 
-		return value - (drink * 5);
+		cout << name << " drew a " << value << endl;
+		return value;
 	}
 
 	void Drink()
 	{
+		cout << name << " drank\n";
 		drink++;
+	}
+
+	int getDrinks()
+	{
+		return drink;
 	}
 
 	double Draw()
@@ -155,6 +202,9 @@ public:
 		int value = rand() % 52 + 1;
 		int cheat = rand() % 100 + 1;
 
+		this->hit = false;
+		this->shot = false;
+
 		if (this->full_drink && (rand() % 10 <= 1))
 		{
 			Drink();
@@ -162,31 +212,43 @@ public:
 		}
 
 		if (cheat >= (cheat_chance * 100))
+		{
+			cout << name << " drew a " << value << endl;
 			return value;
+		}
 		else
 		{
 			cheat = rand() % 100 + 1;
 			if (cheat <= 50)
-				return highest;
-			else
 			{
-				// Interact with Gunslinger
-
-
-				return -1;
+				cout << name << " drew a " << highest << endl;
+				return highest;
 			}
+			else
+				return -1;
 		}
 
 	}
 
 	void Drink()
 	{
+		cout << name << " drank\n";
 		cheat_chance += 0.05;
 	}
 
 	void setHighestCard(int max)
 	{
 		highest = max;
+	}
+
+	int getFired()
+	{
+		return shot;
+	}
+
+	int getHit()
+	{
+		return hit;
 	}
 };
 
@@ -214,9 +276,12 @@ int main()
 {
 	srand(time(NULL));
 
+	bool playing = true, caught = false;
+	int play;
+	int slinger = 0, sharp = 0, tender = 0, sel = 0;
+	int turn = 0, cards = 0, max = 0, won = -1;
+	vector<int> cards_played, temp;
 	vector<unique_ptr<Person>> players;
-	int turn = 0;
-	bool playing = false;
 
 	ProgramGreeting();
 
@@ -226,21 +291,111 @@ int main()
 	players.push_back(make_unique<Gunslinger>());
 	players.push_back(make_unique<CardSharp>());
 
-	for (size_t i, max = players.size(); i != max; i++)
-		cout << *players[i];
-
 	do
 	{
-		size_t random = rand() % players.size();
-		for (size_t i, max = players.size(); i != max; i++)
+		tender = 0;
+		size_t size_of_players = players.size();
+
+		for (size_t element = 0; element != size_of_players; element++)
 		{
-			players[i]->Play();
-			players[i]->Drink();
-			players[i]->Draw();
-			players[random]->fillDrink();
+			// Feature 4 - Make sure for loop doesn't go out of range
+			assert(element != size_of_players);
+			if (!players[element]->getDead())
+			{
+				play = players[element]->Play();
+				cards_played.push_back(play);
+			}
+
+			if (players[element]->getDead() && !players[element]->getChecked())
+			{
+				generatePlayers(players);
+				players[element]->setChecked();
+			}
+
+			if (players[element]->getType() == "CardSharp" && !players[element]->getDead())
+			{
+				// sharp_card = play;
+				sharp = element;
+				players[element]->setHighestCard(max);
+			}
+
+			if (players[element]->getType() == "PokerPlayer" && !players[element]->getDead())
+			{
+				play = play - (5 * players[element]->getDrinks());
+			}
+
+			if (players[element]->getType() == "Gunslinger" && !players[element]->getDead())
+			{
+				// slinger_card = play;
+				slinger = element;
+			}
+
+			if (play > max)
+				max = play;
+
+			do
+			{
+				size_t random_element = rand() % players.size();
+
+				if (players[element]->getType() == "Bartender" && !players[element]->getDead() && !players[random_element]->getDead())
+				{
+					players[random_element]->fillDrink();
+					tender = 1;
+				}
+				if (players[element]->getType() != "Bartender")
+					break;
+			} while (!tender);
+
+			if (play != -1)
+				cards += 1;
+
+			if (play == -1)
+				caught = true;
 		}
+
+		if (caught)
+		{
+			if (players[sharp]->Draw() > players[slinger]->Draw())
+				players[sharp]->setDead();
+			else if (players[sharp]->Draw() < players[slinger]->Draw())
+				players[slinger]->setDead();
+		}
+
+		vector<int>::iterator it = max_element(cards_played.begin(), cards_played.end());
+		sel = distance(cards_played.begin(), it);
+
+		// Feature 2 - Notify user which character won the round
+		cout << right << setw(50) << "WIN: " << players[sel]->getName() << " won the round!\n";
+		players[sel]->addWon();
+		cards_played.clear();
+
+		if (cards >= 52)
+			playing = false;
+
 		turn++;
 	} while (playing);
+
+	cout << '\n';
+	// Specification 5 - When you quit, display all the players (living or dead)
+	for (size_t i = 0, size_of_players = players.size(); i != size_of_players; i++)
+	{
+		if (players[i]->getWon() > won)
+		{
+			won = players[i]->getWon();
+			sel = i;
+		}
+		cout << *players[i];
+	}
+
+	// Feature 3 - Notify user which character won the game
+	cout << "\n\n" << players[sel]->getName() << " won the game!\n";
+
+	// Feature 5 - Play again?
+	char choice;
+	cout << "Simulate another game (y/n)? ";
+	cin >> choice;
+	if (choice == 'y' || choice == 'Y')
+		main();
 
 	return 0;
 }
@@ -257,12 +412,16 @@ void generatePlayers(vector<unique_ptr<Person>> & players)
 	{
 		case 0:
 			players.push_back(make_unique<PokerPlayer>());
+			break;
 		case 1:
 			players.push_back(make_unique<Gunslinger>());
+			break;
 		case 2:
 			players.push_back(make_unique<CardSharp>());
+			break;
 		case 3:
 			players.push_back(make_unique<Bartender>());
+			break;
 		default:
 			cout << "Something happened that shouldn't have.\n";
 			// Feature 1 - Make sure random doesn't get corrupted
@@ -272,10 +431,3 @@ void generatePlayers(vector<unique_ptr<Person>> & players)
 
 	return;
 }
-
-/*int duplicatedName(string name, vector<unique_ptr<Person>> & players)
-{
-	if (players->getName() == name)
-		return 1;
-}
-*/
